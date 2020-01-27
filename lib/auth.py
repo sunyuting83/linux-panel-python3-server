@@ -7,7 +7,6 @@ import base64
 from functools import wraps
 from .bottle import request
 from .utils import abort
-from .werkzeug.local import LocalProxy
 
 dbpath = os.path.join(os.getcwd(), 'db/manage')
 

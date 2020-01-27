@@ -22,18 +22,21 @@ def getsystem():
 
 # 内存,网络
 @route('/getSync')
+@login_required
 def getsync():
   mem = getMem()
   return return_Json(mem)
 
 # 进程列表
 @route('/htop')
+@login_required
 def gethtop():
   top = getHtop()
   return return_Json(top)
 
 # 目录获取
 @route('/getPath')
+@login_required
 def getpath():
   path = request.query.path
   default_path = '/home/sun'
