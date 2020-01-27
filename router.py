@@ -1,4 +1,4 @@
-from lib import route, response, request, getSys, getMem, getHtop, abort, return_Json, getPath
+from lib import route, response, request, getSys, getMem, getHtop, abort, return_Json, getPath, login_required
 
 # 首页403
 @route('/')
@@ -15,6 +15,7 @@ Disallow: /'''
 
 # CPU,硬盘,系统信息
 @route('/getSystem')
+@login_required
 def getsystem():
   system = getSys()
   return return_Json(system)
