@@ -16,16 +16,6 @@ class getPath:
 		isroot = 'isroot'
 		thisname = None
 
-		'''
-		return json
-		pagename='thispath',
-		path = path,
-		isroot = isroot,
-		thisname = thisname,
-		thispath = thispath,
-		thisurl = thisurl
-		'''
-
 		if thispath is not None:
 			if '../' in thispath:
 				self.data = abort(403)
