@@ -1,4 +1,4 @@
-from lib import route, response, request, getSys, getMem, getHtop, abort, return_Json, getPath, login_required
+from lib import route, response, request, getSys, getMem, getHtop, abort, return_Json, getPath, login_required, getUser
 
 # 首页403
 @route('/')
@@ -39,6 +39,9 @@ def gethtop():
 @login_required
 def getpath():
   path = request.query.path
-  default_path = '/home/sun'
-  data = getPath(default_path, path)
-  return data.getJson()
+  default_path = getUser()
+  if default_path['status'] == 0:
+    default_path = default_path['user']['root_path']
+    data = getPath(default_path, path)
+    return data.getJson()
+  return default_path

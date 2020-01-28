@@ -56,6 +56,28 @@ def Login(username, password):
     'message': '用户名或密码不能为空'
   }
 
+def getUser():
+  token = request.headers.get('Authorization')
+  db = getDb()
+  token = str(token.replace('Bearer ', '', 1).encode("utf8"), encoding = "utf8")
+  token = base64.b64decode(token).decode("utf-8")
+  if token in db:
+    user = db[token]
+    user = json.loads(db[user])
+    del user['password']
+    db.close()
+    return {
+      'status': 0,
+      'message': '已登陆',
+      'user': user
+    }
+  else:
+    db.close()
+    return {
+      'status': 1,
+      'message': '未登陆'
+    }
+
 def checkLogin(token):
   db = getDb()
   token = str(token.replace('Bearer ', '', 1).encode("utf8"), encoding = "utf8")
