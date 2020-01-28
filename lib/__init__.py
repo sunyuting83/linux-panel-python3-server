@@ -1,4 +1,4 @@
-from .bottle import Bottle, route, run, response, request
+from .bottle import Bottle, route, run, response, request, static_file
 from .utils import abort, getSize, return_Json
 from .getSystem import getSys, getMem 
 from .htop import getHtop

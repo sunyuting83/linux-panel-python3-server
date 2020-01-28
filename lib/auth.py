@@ -1,15 +1,10 @@
 import dbm
 import os
-import hashlib
 import time
 import json
-import base64
 from functools import wraps
 from .bottle import request
-from .utils import abort
-
-dbpath = os.path.join(os.getcwd(), 'db/manage')
-
+from .utils import abort, enToken, deToken, makeMd5
 
 '''
   说明以下
@@ -20,16 +15,17 @@ dbpath = os.path.join(os.getcwd(), 'db/manage')
 '''
 
 def getDb():
+  dbpath = os.path.join(os.getcwd(), 'db/manage')
   db = dbm.open(dbpath, 'c')
   return db
 
 def Login(username, password):
   if username != None and password != None:
     db = getDb()
-    usermd5 = hashlib.md5(username.encode(encoding='UTF-8')).hexdigest()
+    usermd5 = makeMd5(username)
     if usermd5 in db:
       value = json.loads(db[usermd5])
-      password = hashlib.md5(password.encode(encoding='UTF-8')).hexdigest()
+      password = makeMd5(password)
       if password != value['password']:
         db.close()
         return {
@@ -38,13 +34,13 @@ def Login(username, password):
         }
       else:
         token = value['username'] + value['password'] + value['root_path']
-        token = hashlib.md5(token.encode(encoding='UTF-8')).hexdigest()
+        token = makeMd5(token)
         db[token] = usermd5 #需要再次base64加密
         db.close()
         return {
           'status': 0,
           'message': '登陆成功',
-          'token': str(base64.b64encode(token.encode("utf-8")), encoding = "utf8")
+          'token': enToken(token)
         }
     db.close()
     return {
@@ -59,8 +55,7 @@ def Login(username, password):
 def getUser():
   token = request.headers.get('Authorization')
   db = getDb()
-  token = str(token.replace('Bearer ', '', 1).encode("utf8"), encoding = "utf8")
-  token = base64.b64decode(token).decode("utf-8")
+  token = token = deToken(token)
   if token in db:
     user = db[token]
     user = json.loads(db[user])
@@ -80,20 +75,8 @@ def getUser():
 
 def checkLogin(token):
   db = getDb()
-  token = str(token.replace('Bearer ', '', 1).encode("utf8"), encoding = "utf8")
-  token = base64.b64decode(token).decode("utf-8")
+  token = deToken(token)
   if token in db:
-    '''
-    user = db[token]
-    user = json.loads(db[user])
-    del user['password']
-    db.close()
-    return {
-      'status': 0,
-      'message': '已登陆',
-      'user': user
-    }
-    '''
     db.close()
     return True
   else:
@@ -119,8 +102,9 @@ def addAdmin(params):
   db = getDb()
   now = int(time.time())
   params = json.loads(params)
-  user_key = hashlib.md5(params['username'].encode(encoding='UTF-8')).hexdigest()
-  params['password'] = hashlib.md5(params['password'].encode(encoding='UTF-8')).hexdigest()
+  user_key = makeMd5(params['username'])
+  user_key = '%s%s'%('user.',user_key)
+  params['password'] = makeMd5(params['password'])
   params['crated_at'] = now
   params['uptiem'] = now
   db[user_key] = json.dumps(params)
@@ -130,6 +114,25 @@ def addAdmin(params):
     'message': '添加成功'
   }
 
+def delAdmin(username):
+  if username:
+    db = getDb()
+    user_key = makeMd5(username)
+    user_key = '%s%s'%('user.',user_key)
+    if user_key in db:
+      del db[user_key]
+      return {
+        'status': 0,
+        'message': '删除成功'
+      }
+    return {
+      'status': 1,
+      'message': '管理员不存在'
+    }
+  return {
+    'status': 1,
+    'message': '用户名不能为空'
+  }
 
 # if __name__ == '__main__':
   # print(Login('admin','kanghong123'))

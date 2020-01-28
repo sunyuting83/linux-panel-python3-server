@@ -1,5 +1,7 @@
 from .bottle import response
 import json
+import base64
+import hashlib
 
 application_json = 'application/json; charset=utf-8'
 
@@ -26,3 +28,16 @@ def abort(status):
 def return_Json(data):
 	response.content_type = application_json
 	return data
+
+# base64解码 Token
+def deToken(token):
+  token = str(token.replace('Bearer ', '', 1).encode("utf8"), encoding = "utf8")
+  token = base64.b64decode(token).decode("utf-8")
+  return token
+# base64编码 Token return str
+def enToken(token):
+	return str(base64.b64encode(token.encode("utf-8")), encoding = "utf8")
+# md5加密
+def makeMd5(string):
+  md5 = hashlib.md5(string.encode(encoding='UTF-8')).hexdigest()
+  return md5

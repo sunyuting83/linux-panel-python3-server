@@ -1,4 +1,5 @@
-from lib import route, response, request, getSys, getMem, getHtop, abort, return_Json, getPath, login_required, getUser
+from lib import route, response, request, static_file, getSys, getMem, getHtop, abort, return_Json, getPath, login_required, getUser
+import os
 
 # 首页403
 @route('/')
@@ -12,6 +13,12 @@ def robots():
 	response.content_type = 'text/plain; charset=UTF-8'
 	return '''User-agent: *
 Disallow: /'''
+
+@route('/favicon.ico')
+def favicon():
+  response.content_type = 'application/x-ico'
+  return static_file('favicon.ico', root=os.path.join(os.getcwd(), 'static'), mimetype = 'application/x-ico')
+
 
 # CPU,硬盘,系统信息
 @route('/getSystem')
