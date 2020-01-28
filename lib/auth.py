@@ -107,6 +107,9 @@ def addAdmin(params):
   params['password'] = makeMd5(params['password'])
   params['crated_at'] = now
   params['uptiem'] = now
+  token = params['username'] + params['password'] + params['root_path']
+  token = makeMd5(token)
+  params['token'] = token
   db[user_key] = json.dumps(params)
   db.close()
   return {
@@ -120,11 +123,15 @@ def delAdmin(username):
     user_key = makeMd5(username)
     user_key = '%s%s'%('user.',user_key)
     if user_key in db:
+      token = db[user_key]['token']
       del db[user_key]
+      del db[token]
+      db.close()
       return {
         'status': 0,
         'message': '删除成功'
       }
+    db.close()
     return {
       'status': 1,
       'message': '管理员不存在'
