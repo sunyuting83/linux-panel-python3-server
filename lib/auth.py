@@ -140,14 +140,3 @@ def delAdmin(username):
     'status': 1,
     'message': '用户名不能为空'
   }
-
-# if __name__ == '__main__':
-  # print(Login('admin','kanghong123'))
-  # params = json.dumps({
-  #   'username': 'admin',
-  #   'password': 'kanghong123',
-  #   'isadmin': True,
-  #   'root_path': '/'
-  # })
-  # print(addAdmin(params))
-  # print(checkLogin('Y2M0NDVlMTcwYTRiNTRkNWQwMDhiNTRiOGJlN2UzZTE='))
