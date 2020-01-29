@@ -1,4 +1,5 @@
 from lib import run
+from config import Conf
 import router
 
-run(host='0.0.0.0', port=3200, debug=True, reloader=True)
+run(host=Conf.HOST, port=Conf.PORT, debug=Conf.DEBUG, reloader=Conf.RELOAD)

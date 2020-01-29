@@ -5,6 +5,7 @@ import json
 from functools import wraps
 from .bottle import request
 from .utils import abort, enToken, deToken, makeMd5
+from config import Conf
 
 '''
   说明以下
@@ -14,6 +15,8 @@ from .utils import abort, enToken, deToken, makeMd5
   token value: 用户key
 '''
 
+secret_key =Conf.SECRET_KEY
+
 def getDb():
   dbpath = os.path.join(os.getcwd(), 'db/manage')
   db = dbm.open(dbpath, 'c')
@@ -22,10 +25,10 @@ def getDb():
 def Login(username, password):
   if username != None and password != None:
     db = getDb()
-    usermd5 = '%s%s'%('user.',makeMd5(username))
+    usermd5 = '%s%s'%('user.',makeMd5(username + secret_key))
     if usermd5 in db:
       value = json.loads(db[usermd5])
-      password = makeMd5(password)
+      password = makeMd5(password + secret_key)
       if password != value['password']:
         db.close()
         return {
@@ -33,7 +36,7 @@ def Login(username, password):
           'message': '密码错误'
         }
       else:
-        token = value['username'] + value['password'] + value['root_path']
+        token = value['username'] + value['root_path'] + secret_key + value['password']
         token = makeMd5(token)
         db[token] = usermd5
         db.close()
@@ -124,10 +127,10 @@ def addAdmin(params):
       'message': '用户已存在'
     }
   else:
-    params['password'] = makeMd5(params['password'])
+    params['password'] = makeMd5(params['password'] + secret_key)
     params['crated_at'] = now
     params['uptiem'] = now
-    token = params['username'] + params['password'] + params['root_path']
+    token = params['username'] + params['root_path'] + secret_key + params['password']
     token = makeMd5(token)
     params['token'] = token
     db[user_key] = json.dumps(params)
@@ -142,7 +145,7 @@ def delAdmin(username):
     user = getUser()
     if user['user']['isadmin']:
       db = getDb()
-      user_key = makeMd5(username)
+      user_key = makeMd5(username + secret_key)
       user_key = '%s%s'%('user.',user_key)
       if user_key in db:
         deluser = json.loads(db[user_key])
