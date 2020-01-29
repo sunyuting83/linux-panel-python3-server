@@ -22,7 +22,7 @@ def getDb():
 def Login(username, password):
   if username != None and password != None:
     db = getDb()
-    usermd5 = makeMd5(username)
+    usermd5 = '%s%s'%('user.',makeMd5(username))
     if usermd5 in db:
       value = json.loads(db[usermd5])
       password = makeMd5(password)
@@ -35,7 +35,7 @@ def Login(username, password):
       else:
         token = value['username'] + value['password'] + value['root_path']
         token = makeMd5(token)
-        db[token] = usermd5 #需要再次base64加密
+        db[token] = usermd5
         db.close()
         return {
           'status': 0,
@@ -55,7 +55,7 @@ def Login(username, password):
 def getUser():
   token = request.headers.get('Authorization')
   db = getDb()
-  token = token = deToken(token)
+  token = deToken(token)
   if token in db:
     user = db[token]
     user = json.loads(db[user])
@@ -79,9 +79,8 @@ def checkLogin(token):
   if token in db:
     db.close()
     return True
-  else:
-    db.close()
-    return False
+  db.close()
+  return False
 
 def login_required(func):
   @wraps(func)
@@ -96,46 +95,78 @@ def login_required(func):
   return decorated_view
 
 def Logout():
-  return True
+  db = getDb()
+  token = request.headers.get('Authorization')
+  token = deToken(token)
+  if token in db:
+    del db[token]
+    db.close()
+    return {
+      'status': 0,
+      'message': '已登出'
+    }
+  else:
+    db.close()
+    return {
+      'status': 1,
+      'message': '未登陆'
+    }
 
 def addAdmin(params):
   db = getDb()
   now = int(time.time())
-  params = json.loads(params)
   user_key = makeMd5(params['username'])
   user_key = '%s%s'%('user.',user_key)
-  params['password'] = makeMd5(params['password'])
-  params['crated_at'] = now
-  params['uptiem'] = now
-  token = params['username'] + params['password'] + params['root_path']
-  token = makeMd5(token)
-  params['token'] = token
-  db[user_key] = json.dumps(params)
-  db.close()
-  return {
-    'status': 0,
-    'message': '添加成功'
-  }
-
-def delAdmin(username):
-  if username:
-    db = getDb()
-    user_key = makeMd5(username)
-    user_key = '%s%s'%('user.',user_key)
-    if user_key in db:
-      token = db[user_key]['token']
-      del db[user_key]
-      del db[token]
-      db.close()
-      return {
-        'status': 0,
-        'message': '删除成功'
-      }
+  if user_key in db:
     db.close()
     return {
       'status': 1,
-      'message': '管理员不存在'
+      'message': '用户已存在'
     }
+  else:
+    params['password'] = makeMd5(params['password'])
+    params['crated_at'] = now
+    params['uptiem'] = now
+    token = params['username'] + params['password'] + params['root_path']
+    token = makeMd5(token)
+    params['token'] = token
+    db[user_key] = json.dumps(params)
+    db.close()
+    return {
+      'status': 0,
+      'message': '添加成功'
+    }
+
+def delAdmin(username):
+  if username:
+    user = getUser()
+    if user['user']['isadmin']:
+      db = getDb()
+      user_key = makeMd5(username)
+      user_key = '%s%s'%('user.',user_key)
+      if user_key in db:
+        deluser = json.loads(db[user_key])
+        if username != deluser['username']:
+          token = deluser['token']
+          del db[user_key]
+          del db[token]
+          db.close()
+          return {
+            'status': 0,
+            'message': '删除成功'
+          }
+        db.close()
+        return {
+          'status': 1,
+          'message': '无法删除自己'
+        }
+      db.close()
+      return {
+        'status': 1,
+        'message': '管理员不存在'
+      }
+    db.close()
+    return abort(403)
   return {
     'status': 1,
     'message': '用户名不能为空'
