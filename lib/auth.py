@@ -28,23 +28,30 @@ def Login(username, password):
     usermd5 = '%s%s'%('user.',makeMd5(username + secret_key))
     if usermd5 in db:
       value = json.loads(db[usermd5])
-      password = makeMd5(password + secret_key)
-      if password != value['password']:
+      token = value['username'] + value['root_path'] + secret_key + value['password']
+      token = makeMd5(token)
+      if token in db:
         db.close()
         return {
           'status': 1,
-          'message': '密码错误'
+          'message': '已登陆'
         }
       else:
-        token = value['username'] + value['root_path'] + secret_key + value['password']
-        token = makeMd5(token)
-        db[token] = usermd5
-        db.close()
-        return {
-          'status': 0,
-          'message': '登陆成功',
-          'token': enToken(token)
-        }
+        password = makeMd5(password + secret_key)
+        if password != value['password']:
+          db.close()
+          return {
+            'status': 1,
+            'message': '密码错误'
+          }
+        else:
+          db[token] = usermd5
+          db.close()
+          return {
+            'status': 0,
+            'message': '登陆成功',
+            'token': enToken(token)
+          }
     db.close()
     return {
       'status': 1,
@@ -118,7 +125,7 @@ def Logout():
 def addAdmin(params):
   db = getDb()
   now = int(time.time())
-  user_key = makeMd5(params['username'])
+  user_key = makeMd5(params['username'] + secret_key)
   user_key = '%s%s'%('user.',user_key)
   if user_key in db:
     db.close()
@@ -152,7 +159,8 @@ def delAdmin(username):
         if username != deluser['username']:
           token = deluser['token']
           del db[user_key]
-          del db[token]
+          if token in db:
+            del db[token]
           db.close()
           return {
             'status': 0,
@@ -174,3 +182,19 @@ def delAdmin(username):
     'status': 1,
     'message': '用户名不能为空'
   }
+
+def getAdminList():
+  user = getUser()
+  if user['user']['isadmin']:
+    db = getDb()
+    admin_list = []
+    for key in db.keys():
+      if 'user.' in str(key, encoding = "utf8"):
+        admin_list.append(json.loads(db[key]))
+    db.close()
+    return {
+      'status': 0,
+      'message': 'list',
+      'data': admin_list
+    }
+  return abort(403)

@@ -1,4 +1,4 @@
-from lib import route, response, request, static_file, getSys, getMem, getHtop, abort, return_Json, getPath, login_required, getUser, Login, Logout, addAdmin, delAdmin
+from lib import route, response, request, static_file, getSys, getMem, getHtop, abort, return_Json, getPath, login_required, getUser, Login, Logout, addAdmin, delAdmin, getAdminList
 import os
 
 # 首页403
@@ -32,6 +32,14 @@ def login():
 @login_required
 def logout():
   data = Logout()
+  return return_Json(data)
+
+
+# AdminList
+@route('/getadminlist', method='GET')
+@login_required
+def getAdminlist():
+  data = getAdminList()
   return return_Json(data)
 
 # Add Admin
