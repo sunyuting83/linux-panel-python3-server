@@ -27,31 +27,25 @@ def Login(username, password):
     db = getDb()
     usermd5 = '%s%s'%('user.',makeMd5(username + secret_key))
     if usermd5 in db:
+      password = makeMd5(password + secret_key)
       value = json.loads(db[usermd5])
-      token = value['username'] + value['root_path'] + secret_key + value['password']
-      token = makeMd5(token)
-      if token in db:
+      if password != value['password']:
         db.close()
         return {
           'status': 1,
-          'message': '已登陆'
+          'message': '密码错误'
         }
       else:
-        password = makeMd5(password + secret_key)
-        if password != value['password']:
-          db.close()
-          return {
-            'status': 1,
-            'message': '密码错误'
-          }
-        else:
+        token = value['username'] + value['root_path'] + secret_key + value['password']
+        token = makeMd5(token)
+        if token not in db:
           db[token] = usermd5
-          db.close()
-          return {
-            'status': 0,
-            'message': '登陆成功',
-            'token': enToken(token)
-          }
+        db.close()
+        return {
+          'status': 0,
+          'message': '登陆成功',
+          'token': enToken(token)
+        }
     db.close()
     return {
       'status': 1,
