@@ -11,7 +11,7 @@ from config import Conf
   说明以下
   用户key: username md5
   用户value: username, password, root_path, isadmin, uptiem, crated_at => josn.dumps(values)
-  token key: username + password + root_path => (md5) -> (base64)
+  token key: username + root_path + secret_key + password => (md5) -> (base64)
   token value: 用户key
 '''
 
